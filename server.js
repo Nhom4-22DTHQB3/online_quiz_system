@@ -167,8 +167,8 @@ io.on('connection', (socket) => {
     socket.on('guest:submit_score', ({ pin, pointsToAdd }) => {
         if(rooms[pin] && rooms[pin].players[socket.id]) {
             rooms[pin].players[socket.id].score += pointsToAdd;
-            // Broadcast BXH cập nhật cho Host
-            io.to(rooms[pin].hostId).emit('room:leaderboard_update', Object.values(rooms[pin].players));
+            // Broadcast BXH cập nhật cho toàn bộ phòng để Guest biết Top 1
+            io.to(pin).emit('room:leaderboard_update', Object.values(rooms[pin].players));
             // Trả về số điểm mới nhất cho chính xác
             io.to(socket.id).emit('guest:update_score', rooms[pin].players[socket.id].score);
         }
@@ -248,8 +248,8 @@ io.on('connection', (socket) => {
             type 
         });
         
-        // Cập nhật Update bảng Xếp Hạng
-        io.to(room.hostId).emit('room:leaderboard_update', Object.values(room.players));
+        // Cập nhật Update bảng Xếp Hạng cho cả phòng
+        io.to(pin).emit('room:leaderboard_update', Object.values(room.players));
     });
 
     // ----- DISCONNECT DỌN DẸP ----- //

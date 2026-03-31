@@ -9,6 +9,7 @@ export default function HostGame() {
     const pin = sessionStorage.getItem('host_pin');
     const [leaderboard, setLeaderboard] = useState([]);
     const [actionLogs, setActionLogs] = useState([]);
+    const [isGameEnded, setIsGameEnded] = useState(false);
 
     useEffect(() => {
         if(!pin) navigate('/host');
@@ -33,7 +34,7 @@ export default function HostGame() {
 
     const stopGame = () => {
         socket.emit('host:stop_game', pin);
-        navigate('/host');
+        setIsGameEnded(true);
     };
 
     return (
@@ -42,17 +43,26 @@ export default function HostGame() {
             <div className="flex justify-between items-center mb-8 bg-slate-800/50 p-6 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-xl">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-black flex items-center gap-4 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]">
-                        <Trophy className="w-10 h-10 md:w-14 md:h-14" /> ĐUA TOP THỜI GIAN THỰC
+                        <Trophy className="w-10 h-10 md:w-14 md:h-14" /> {isGameEnded ? 'BẢNG XẾP HẠNG CHUNG CUỘC' : 'ĐUA TOP THỜI GIAN THỰC'}
                     </h1>
                     <p className="text-slate-400 font-bold text-xl mt-2 tracking-widest">MÃ PHÒNG CHƠI: <span className="text-white text-2xl bg-black/30 px-3 py-1 rounded-lg ml-2">{pin}</span></p>
                 </div>
 
-                <button 
-                    onClick={stopGame}
-                    className="bg-red-500 hover:bg-red-400 text-white font-bold py-4 px-8 rounded-2xl flex items-center gap-3 transition-colors shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] text-xl"
-                >
-                    <StopCircle size={24} /> KẾT THÚC NGAY
-                </button>
+                {!isGameEnded ? (
+                    <button 
+                        onClick={stopGame}
+                        className="bg-red-500 hover:bg-red-400 text-white font-bold py-4 px-8 rounded-2xl flex items-center gap-3 transition-colors shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] text-xl"
+                    >
+                        <StopCircle size={24} /> KẾT THÚC NGAY
+                    </button>
+                ) : (
+                    <button 
+                        onClick={() => navigate('/host')}
+                        className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-4 px-8 rounded-2xl flex items-center gap-3 transition-colors shadow-[0_0_30px_rgba(71,85,105,0.4)] text-xl"
+                    >
+                        ⬅ VỀ T.CHỦ
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col xl:flex-row gap-8 flex-1">

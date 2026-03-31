@@ -15,6 +15,9 @@ export default function GuestGame() {
     const [showingResult, setShowingResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
     const [gameEnded, setGameEnded] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(15);
+    const [isTimeUp, setIsTimeUp] = useState(false);
+    const [myRank, setMyRank] = useState(0); // 0 = Chưa rõ hạng
 
     // ==== THẺ BÀI CHỨC NĂNG ====
     const [allCards, setAllCards] = useState([]);
@@ -32,6 +35,18 @@ export default function GuestGame() {
         setActiveCardMessage(msg);
         setTimeout(() => setActiveCardMessage(""), 4000);
     };
+
+    // Đếm ngược thời gian làm bài
+    useEffect(() => {
+        if (!quiz || gameEnded || showingResult || showingCardSelection || freezeTime > 0) return;
+        
+        if (timeLeft > 0) {
+            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+            return () => clearTimeout(timer);
+        } else if (timeLeft === 0 && !showingResult) {
+            handleAnswer(null); // Nộp giấy trắng do hết giờ
+        }
+    }, [timeLeft, quiz, gameEnded, showingResult, showingCardSelection, freezeTime]);
 
     useEffect(() => {
         if(!pin || !quizId) navigate('/');
@@ -57,12 +72,17 @@ export default function GuestGame() {
             .catch(err => console.error(err));
 
         socket.on('room:game_stopped', () => {
-            alert("Host đã kết thúc hoặc hủy trò chơi!");
-            navigate('/');
+            setGameEnded(true); // Nếu Host dừng, Guest sẽ xem BXH cuối
         });
 
         socket.on('guest:update_score', (serverScore) => {
             setScore(serverScore);
+        });
+
+        socket.on('room:leaderboard_update', (players) => {
+            const sorted = [...players].sort((a,b) => b.score - a.score);
+            const rank = sorted.findIndex(p => p.id === socket.id) + 1;
+            setMyRank(rank);
         });
 
         // Lắng nghe bị tấn công
@@ -88,6 +108,7 @@ export default function GuestGame() {
         return () => {
             socket.off('room:game_stopped');
             socket.off('guest:update_score');
+            socket.off('room:leaderboard_update');
             socket.off('guest:receive_attack');
             socket.off('guest:shield_broken');
             socket.off('guest:receive_buff');
@@ -106,11 +127,12 @@ export default function GuestGame() {
     }, [freezeTime]);
 
     const handleAnswer = (selectedOption) => {
-        if (freezeTime > 0) return; // Đang đóng băng không được bấm
+        if (freezeTime > 0 && selectedOption !== null) return; // Đang đóng băng không được bấm, nhưng hệ thống được phép tự nộp bài nếu hết giờ
         
         const currentQ = quiz.questions[currentQuestionIndex];
         const correct = selectedOption === currentQ.correctAnswer;
         
+        setIsTimeUp(selectedOption === null);
         setIsCorrect(correct);
         setShowingResult(true);
 
@@ -126,6 +148,8 @@ export default function GuestGame() {
             setShowingResult(false);
             setRemovedOptions([]);
             setActiveMultiplier(1); // Reset sau khi dùng
+            setTimeLeft(15); // Đặt lại bộ đếm TG
+            setIsTimeUp(false);
             
             if(currentQuestionIndex < quiz.questions.length - 1) {
                 const nextIdx = currentQuestionIndex + 1;
@@ -260,7 +284,10 @@ export default function GuestGame() {
             </AnimatePresence>
 
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 px-8 py-5 bg-slate-800/50 rounded-3xl border border-slate-600 shadow-xl gap-4">
-                <span className="font-black text-xl text-slate-400">Câu hỏi {currentQuestionIndex + 1} / {quiz.questions.length}</span>
+                <div className="flex items-center gap-4">
+                    <span className="font-black text-xl text-slate-400">Câu hỏi {currentQuestionIndex + 1} / {quiz.questions.length}</span>
+                    <span className="font-black text-2xl text-red-400 bg-red-500/10 px-4 py-2 rounded-xl">⏳ {timeLeft}s</span>
+                </div>
                 
                 <div className="flex items-center gap-4">
                     {hasShield && <span className="font-black text-xl bg-sky-500/20 text-sky-400 px-4 py-2 rounded-xl border border-sky-400/50 shadow-[0_0_15px_rgba(14,165,233,0.5)] flex items-center gap-2">🛡️ CÓ KHIÊN</span>}
@@ -310,9 +337,14 @@ export default function GuestGame() {
                             exit={{ scale: 0 }}
                             className={`col-span-1 md:col-span-2 p-16 rounded-[3rem] text-center shadow-2xl ${isCorrect ? 'bg-emerald-500' : 'bg-red-500'}`}
                         >
-                            <h1 className="text-6xl lg:text-7xl font-black text-white drop-shadow-md mb-6">{isCorrect ? 'CHÍNH XÁC! 🎉' : 'SAI RỒI! 😢'}</h1>
+                            <h1 className="text-6xl lg:text-7xl font-black text-white drop-shadow-md mb-6">{isCorrect ? 'CHÍNH XÁC! 🎉' : isTimeUp ? 'HẾT GIỜ! ⏰' : 'SAI RỒI! 😢'}</h1>
                             <p className="text-3xl lg:text-4xl font-bold text-white/90">
-                                {isCorrect ? `+${currentQ.points * activeMultiplier} Điểm vào quỹ` : 'Không được cộng điểm, cẩn thận người sau qua mặt kìa'}
+                                {isCorrect 
+                                    ? `+${currentQ.points * activeMultiplier} Điểm vào quỹ` 
+                                    : (myRank === 1 
+                                        ? 'Không được cộng điểm, hạng 1 ai biểu sai chi! 😜' 
+                                        : `Đáp án đúng là: ${currentQ.correctAnswer}`)
+                                }
                             </p>
                         </motion.div>
                     )}

@@ -12,7 +12,7 @@ export default function HostCreateQuiz() {
     ]);
     const [allCards, setAllCards] = useState([]);
     const [allowedCards, setAllowedCards] = useState([]);
-    
+
     useEffect(() => {
         axios.get('http://localhost:5000/api/cards')
             .then(res => {
@@ -27,7 +27,7 @@ export default function HostCreateQuiz() {
     };
 
     const handleRemoveQuestion = (idx) => {
-        if(questions.length === 1) return alert("Phải có ít nhất 1 câu hỏi!");
+        if (questions.length === 1) return alert("Phải có ít nhất 1 câu hỏi!");
         setQuestions(questions.filter((_, i) => i !== idx));
     };
 
@@ -44,21 +44,21 @@ export default function HostCreateQuiz() {
     };
 
     const toggleCard = (type) => {
-        setAllowedCards(prev => 
+        setAllowedCards(prev =>
             prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
         );
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if(!title.trim()) return alert("Vui lòng nhập Tên Bộ Câu Hỏi!");
-        
+
+        if (!title.trim()) return alert("Vui lòng nhập Tên Bộ Câu Hỏi!");
+
         // Format lại mảng trước khi gửi: correctAnswer sẽ là chuỗi dựa vào correctIndex
         const formattedQuestions = questions.map(q => {
-            if(!q.questionText.trim()) throw new Error("Vui lòng điền đủ nội dung câu hỏi!");
-            if(q.options.some(opt => !opt.trim())) throw new Error("Vui lòng điền đủ 4 đáp án cho mỗi câu!");
-            
+            if (!q.questionText.trim()) throw new Error("Vui lòng điền đủ nội dung câu hỏi!");
+            if (q.options.some(opt => !opt.trim())) throw new Error("Vui lòng điền đủ 4 đáp án cho mỗi câu!");
+
             return {
                 questionText: q.questionText,
                 options: q.options,
@@ -93,8 +93,8 @@ export default function HostCreateQuiz() {
                 {/* Info */}
                 <div className="bg-slate-800/80 p-6 rounded-3xl border border-slate-700 shadow-xl">
                     <label className="block text-xl font-bold text-slate-300 mb-2">Tên Bộ Câu Hỏi</label>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         required
                         value={title}
                         onChange={e => setTitle(e.target.value)}
@@ -107,13 +107,13 @@ export default function HostCreateQuiz() {
                 <div className="bg-slate-800/80 p-6 rounded-3xl border border-slate-700 shadow-xl">
                     <h2 className="text-2xl font-bold text-amber-400 mb-4 flex items-center gap-2">🃏 Cấu Hình Thẻ Bài Của Trận Đấu</h2>
                     <p className="text-slate-400 mb-6">Chọn những lá bài bạn cho phép xuất hiện ngẫu nhiên trong trận đấu này. Khuyến khích chọn hết cho vui!</p>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         {allCards.map(card => {
                             const isSelected = allowedCards.includes(card.type);
                             return (
-                                <div 
-                                    key={card.type} 
+                                <div
+                                    key={card.type}
                                     onClick={() => toggleCard(card.type)}
                                     className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center text-center gap-2 
                                         ${isSelected ? 'border-amber-400 bg-amber-400/10' : 'border-slate-700 opacity-50 bg-slate-900'}
@@ -130,21 +130,21 @@ export default function HostCreateQuiz() {
                 {/* Questions */}
                 <div className="flex flex-col gap-6">
                     {questions.map((q, qIdx) => (
-                        <motion.div 
-                            key={qIdx} 
+                        <motion.div
+                            key={qIdx}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-slate-800/80 p-6 md:p-8 rounded-3xl border border-slate-700 shadow-xl relative"
                         >
                             <div className="absolute top-6 right-6 flex gap-4">
                                 <span className="font-bold text-slate-500">Câu #{qIdx + 1}</span>
-                                <button type="button" onClick={() => handleRemoveQuestion(qIdx)} className="text-red-400 hover:text-red-300"><Trash2/></button>
+                                <button type="button" onClick={() => handleRemoveQuestion(qIdx)} className="text-red-400 hover:text-red-300"><Trash2 /></button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div className="md:col-span-3">
                                     <label className="block text-sm font-bold text-indigo-300 mb-2">Nội dung câu hỏi</label>
-                                    <input 
+                                    <input
                                         type="text" required value={q.questionText}
                                         onChange={e => updateQuestion(qIdx, 'questionText', e.target.value)}
                                         placeholder="Nhập câu hỏi tại đây..."
@@ -153,7 +153,7 @@ export default function HostCreateQuiz() {
                                 </div>
                                 <div className="md:col-span-1">
                                     <label className="block text-sm font-bold text-amber-300 mb-2">Điểm số</label>
-                                    <input 
+                                    <input
                                         type="number" required value={q.points} min="10"
                                         onChange={e => updateQuestion(qIdx, 'points', e.target.value)}
                                         className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-indigo-500 font-bold"
@@ -165,9 +165,9 @@ export default function HostCreateQuiz() {
                                 {[0, 1, 2, 3].map(optIdx => (
                                     <div key={optIdx} className="flex flex-col gap-2">
                                         <label className="flex items-center gap-2 cursor-pointer w-fit">
-                                            <input 
-                                                type="radio" 
-                                                name={`correct-${qIdx}`} 
+                                            <input
+                                                type="radio"
+                                                name={`correct-${qIdx}`}
                                                 checked={q.correctIndex === optIdx}
                                                 onChange={() => updateQuestion(qIdx, 'correctIndex', optIdx)}
                                                 className="w-5 h-5 accent-emerald-500"
@@ -176,13 +176,12 @@ export default function HostCreateQuiz() {
                                                 {q.correctIndex === optIdx ? 'Là ĐÁP ÁN ĐÚNG' : 'Là Đáp án sai'}
                                             </span>
                                         </label>
-                                        <input 
+                                        <input
                                             type="text" required value={q.options[optIdx]}
                                             onChange={e => updateOption(qIdx, optIdx, e.target.value)}
                                             placeholder={`Lựa chọn ${optIdx + 1}`}
-                                            className={`w-full bg-slate-900 border-2 rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${
-                                                q.correctIndex === optIdx ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-700 focus:border-indigo-500'
-                                            }`}
+                                            className={`w-full bg-slate-900 border-2 rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${q.correctIndex === optIdx ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-700 focus:border-indigo-500'
+                                                }`}
                                         />
                                     </div>
                                 ))}
@@ -192,18 +191,18 @@ export default function HostCreateQuiz() {
                 </div>
 
                 <div className="flex gap-4 sticky bottom-8 left-0 justify-center">
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={handleAddQuestion}
                         className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-8 rounded-full flex items-center gap-2 shadow-2xl transition-transform hover:scale-105 border border-indigo-400"
                     >
-                        <Plus size={24}/> Thêm Câu Hỏi
+                        <Plus size={24} /> Thêm Câu Hỏi
                     </button>
-                    <button 
+                    <button
                         type="submit"
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-8 rounded-full flex items-center gap-2 shadow-2xl transition-transform hover:scale-105 border border-emerald-400"
                     >
-                        <Save size={24}/> Lưu Bộ Câu Hỏi
+                        <Save size={24} /> Lưu Bộ Câu Hỏi
                     </button>
                 </div>
             </form>
