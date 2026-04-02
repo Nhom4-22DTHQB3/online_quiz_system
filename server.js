@@ -273,3 +273,9 @@ const PORT = 5000;
 server.listen(PORT, () => {
     console.log(`🚀 MERN Backend (Socket & API) xịn xò đang chạy trên cổng ${PORT}`);
 });
+// Developer B's incoming changes from main (Database setup)
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error(err));
+
