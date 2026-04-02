@@ -25,3 +25,4 @@ class QuizModel {
 }
 
 module.exports = QuizModel;
+// feature/backend-api: QuizModel schema
