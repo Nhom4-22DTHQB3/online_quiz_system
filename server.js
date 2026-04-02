@@ -279,3 +279,8 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error(err));
 
+// Developer C's local changes (Socket setup)
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: { origin: process.env.CLIENT_URL }
+});
